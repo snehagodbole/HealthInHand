@@ -24,6 +24,12 @@ export default function Navbar() {
   const [ready, setReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const userDisplayName =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "User";
+
   // Close menu on route change
   useEffect(() => {
     setMenuOpen(false);
@@ -89,16 +95,21 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           {/* Desktop auth buttons */}
           {ready && user ? (
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="button-secondary hidden px-3 py-2 md:inline-flex"
-              aria-label="Log out"
-              title="Log out"
-            >
-              <LogOut size={18} aria-hidden="true" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
+            <>
+              <span className="hidden max-w-36 truncate rounded-lg bg-white/80 px-3 py-2 text-sm font-medium text-moss-700 md:inline-block">
+                {userDisplayName}
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="button-secondary hidden px-3 py-2 md:inline-flex"
+                aria-label="Log out"
+                title="Log out"
+              >
+                <LogOut size={18} aria-hidden="true" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </>
           ) : (
             <div className="hidden items-center gap-2 md:flex">
               <Link href="/login" className="button-secondary px-4 py-2">
@@ -132,6 +143,9 @@ export default function Navbar() {
           <div className="page-shell flex flex-col gap-1 py-3">
             {user ? (
               <>
+                <p className="rounded-lg bg-white/70 px-4 py-2 text-sm font-medium text-moss-700">
+                  Signed in as {userDisplayName}
+                </p>
                 {appLinks.map((link) => (
                   <Link
                     key={link.href}

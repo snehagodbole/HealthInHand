@@ -278,6 +278,15 @@ export type Database = {
         };
         Returns: string;
       };
+      create_shared_fast: {
+        Args: {
+          fast_title: string;
+          fast_start_time: string;
+          fast_fasting_hours_goal: number;
+          invite_emails?: string[];
+        };
+        Returns: string;
+      };
       get_shared_fast_invite: {
         Args: {
           invite_token: string;

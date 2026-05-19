@@ -113,57 +113,27 @@ export default function TogetherClient({
       return;
     }
 
-    const supabase = createSupabaseBrowserClient();
-    const { data: sharedFast, error: sharedFastError } = await supabase
-      .from("shared_fasts")
-      .insert({
-        owner_id: userId,
-        title: title.trim() || "Fast together",
-        start_time: selectedStartTime.toISOString(),
-        fasting_hours_goal: fastingHoursGoal
-      })
-      .select("id")
-      .single();
-
-    if (sharedFastError || !sharedFast) {
-      setMessage(sharedFastError?.message ?? "Could not create shared fast.");
-      setLoading(null);
-      return;
-    }
-
-    const { error: participantError } = await supabase
-      .from("shared_fast_participants")
-      .insert({
-        shared_fast_id: sharedFast.id,
-        user_id: userId,
-        role: "owner",
-        status: "joined"
-      });
-
-    if (participantError) {
-      setMessage(participantError.message);
-      setLoading(null);
-      return;
-    }
-
     const emails = parseInviteEmails(inviteEmails);
 
-    if (emails.length > 0) {
-      const { error: inviteError } = await supabase
-        .from("shared_fast_invites")
-        .insert(
-          emails.map((email) => ({
-            shared_fast_id: sharedFast.id,
-            invited_email: email,
-            created_by: userId
-          }))
-        );
+    const response = await fetch("/api/shared-fasts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: title.trim() || "Fast together",
+        startTime: selectedStartTime.toISOString(),
+        fastingHoursGoal,
+        inviteEmails: emails
+      })
+    });
 
-      if (inviteError) {
-        setMessage(inviteError.message);
-        setLoading(null);
-        return;
-      }
+    const result = await response.json();
+
+    if (!response.ok) {
+      setMessage(result.error ?? "Could not create shared fast.");
+      setLoading(null);
+      return;
     }
 
     setTitle("Weekend reset");
@@ -171,8 +141,14 @@ export default function TogetherClient({
     setFastingHoursGoal(16);
     setInviteEmails("");
     setMessage(
-      emails.length > 0
-        ? "Shared fast created. Copy an invite link below when you are ready."
+      result.failed?.length > 0
+        ? `Shared fast created, but ${result.failed.length} email ${
+            result.failed.length === 1 ? "invite" : "invites"
+          } could not be sent.`
+        : emails.length > 0
+        ? `${result.sent ?? emails.length} ${
+            (result.sent ?? emails.length) === 1 ? "invite was" : "invites were"
+          } sent.`
         : "Shared fast created. Add a friend email below to make an invite link."
     );
     router.refresh();
@@ -199,20 +175,29 @@ export default function TogetherClient({
       return;
     }
 
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.from("shared_fast_invites").insert(
-      emails.map((email) => ({
-        shared_fast_id: sharedFastId,
-        invited_email: email,
-        created_by: userId
-      }))
-    );
+    const response = await fetch(`/api/shared-fasts/${sharedFastId}/invites`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        inviteEmails: emails
+      })
+    });
 
-    if (error) {
-      setMessage(error.message);
+    const result = await response.json();
+
+    if (!response.ok) {
+      setMessage(result.error ?? "Could not send invite.");
     } else {
       setInviteInputs((current) => ({ ...current, [sharedFastId]: "" }));
-      setMessage("Invite link created.");
+      setMessage(
+        result.failed?.length > 0
+          ? `${result.sent ?? 0} ${
+              result.sent === 1 ? "invite was" : "invites were"
+            } sent, but ${result.failed.length} failed.`
+          : "Invite email sent."
+      );
       router.refresh();
     }
 
@@ -242,8 +227,18 @@ export default function TogetherClient({
       plannedStart.getTime() > Date.now() ? plannedStart : new Date();
 
     const supabase = createSupabaseBrowserClient();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setMessage("Sign in again before starting a shared fast.");
+      setLoading(null);
+      return;
+    }
+
     const { error } = await supabase.from("fasting_sessions").insert({
-      user_id: userId,
+      user_id: user.id,
       shared_fast_id: sharedFast.id,
       start_time: startAt.toISOString(),
       status: "active"

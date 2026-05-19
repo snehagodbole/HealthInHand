@@ -25,7 +25,11 @@ npm install
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-public-key
+RESEND_API_KEY=your-resend-api-key
+RESEND_FROM_EMAIL="HealthInHand <invites@yourdomain.com>"
 ```
+
+`RESEND_FROM_EMAIL` must use a sender that is allowed in your Resend account. For real friend invites, verify a domain in Resend and use an address on that domain.
 
 3. Run the SQL in [supabase/schema.sql](supabase/schema.sql) in the Supabase SQL editor.
 
@@ -43,6 +47,7 @@ The schema creates:
 
 - `profiles` for each authenticated user and selected fasting plan.
 - `fasting_sessions` for active and completed fasts.
+- `shared_fasts`, `shared_fast_participants`, and `shared_fast_invites` for fasting with friends.
 - `weight_measurements` for tracking weight changes over time.
 - A partial unique index that allows only one active fast per user.
 - Row-level security policies so users can only access their own profile, sessions, and measurements.
@@ -61,6 +66,8 @@ The schema creates:
 - Progress page shows weekly hours.
 - Progress page allows weight logging and shows weight fluctuation.
 - User cannot start two active fasts.
+- User can create a shared fast and send invite emails.
+- Invite recipients can open the link, log in, and join the shared fast.
 - Logged-out user cannot access dashboard, history, progress, or onboarding.
 
 ## Scripts

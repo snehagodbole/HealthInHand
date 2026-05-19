@@ -316,6 +316,76 @@ begin
 end;
 $$;
 
+create or replace function public.create_shared_fast(
+  fast_title text,
+  fast_start_time timestamp with time zone,
+  fast_fasting_hours_goal integer,
+  invite_emails text[] default array[]::text[]
+)
+returns uuid
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  new_shared_fast_id uuid;
+  invite_email text;
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required.';
+  end if;
+
+  if fast_fasting_hours_goal < 1 or fast_fasting_hours_goal > 168 then
+    raise exception 'Fasting goal must be between 1 and 168 hours.';
+  end if;
+
+  insert into public.shared_fasts (
+    owner_id,
+    title,
+    start_time,
+    fasting_hours_goal
+  )
+  values (
+    auth.uid(),
+    coalesce(nullif(trim(fast_title), ''), 'Fast together'),
+    fast_start_time,
+    fast_fasting_hours_goal
+  )
+  returning id into new_shared_fast_id;
+
+  insert into public.shared_fast_participants (
+    shared_fast_id,
+    user_id,
+    role,
+    status
+  )
+  values (
+    new_shared_fast_id,
+    auth.uid(),
+    'owner',
+    'joined'
+  );
+
+  foreach invite_email in array invite_emails loop
+    invite_email := lower(trim(invite_email));
+
+    if invite_email <> '' then
+      insert into public.shared_fast_invites (
+        shared_fast_id,
+        invited_email,
+        created_by
+      )
+      values (
+        new_shared_fast_id,
+        invite_email,
+        auth.uid()
+      );
+    end if;
+  end loop;
+
+  return new_shared_fast_id;
+end;
+$$;
+
 create or replace function public.accept_shared_fast_invite(invite_token uuid)
 returns uuid
 language plpgsql
@@ -371,3 +441,9 @@ begin
   return invite_record.shared_fast_id;
 end;
 $$;
+
+grant execute on function public.get_shared_fast_invite(uuid) to authenticated;
+grant execute on function public.create_shared_fast(text, timestamp with time zone, integer, text[]) to authenticated;
+grant execute on function public.accept_shared_fast_invite(uuid) to authenticated;
+
+notify pgrst, 'reload schema';
