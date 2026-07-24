@@ -46,8 +46,9 @@ export default function SignupPage() {
         id: data.user.id,
         email: data.user.email
       });
-      router.push("/onboarding");
-      router.refresh();
+      // Full-page navigation ensures auth cookies are sent when middleware
+      // checks the protected onboarding route.
+      window.location.href = "/onboarding";
     } else {
       setMessage("Check your email to confirm your account, then log in.");
     }
