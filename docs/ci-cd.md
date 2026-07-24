@@ -22,18 +22,20 @@ Azure DevOps is not itself a hosting runtime. If you meant an Azure DevOps Pipel
 
 The workflow uses GitHub OpenID Connect instead of a publish profile. This works when Azure App Service basic authentication is disabled.
 
-Create an Azure identity for GitHub Actions, give it permission to deploy to the App Service, and add a federated credential for this repository and branch.
+Create an Azure identity for GitHub Actions, give it permission to deploy to the App Service, and add a federated credential for this repository.
 
-The GitHub federated credential subject for the production branch should be:
+The deploy job uses the GitHub environment named `production`, so the federated credential should use entity type `Environment` with value `production`.
+
+The GitHub federated credential subject should be:
+
+```bash
+repo:<github-owner>/<github-repo>:environment:production
+```
+
+If you remove the `environment: production` block from the workflow later, use a branch subject instead:
 
 ```bash
 repo:<github-owner>/<github-repo>:ref:refs/heads/main
-```
-
-If your production branch is `master`, use:
-
-```bash
-repo:<github-owner>/<github-repo>:ref:refs/heads/master
 ```
 
 ## GitHub Repository Secrets
