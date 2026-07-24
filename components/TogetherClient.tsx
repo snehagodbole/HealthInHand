@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CalendarClock,
@@ -59,6 +59,10 @@ function parseInviteEmails(value: string) {
   );
 }
 
+function getDefaultStartTime() {
+  return toDateTimeLocalValue(new Date(Date.now() + 60 * 60 * 1000));
+}
+
 export default function TogetherClient({
   userId,
   activeSession,
@@ -66,15 +70,19 @@ export default function TogetherClient({
 }: TogetherClientProps) {
   const router = useRouter();
   const [title, setTitle] = useState("Weekend reset");
-  const [startTime, setStartTime] = useState(() =>
-    toDateTimeLocalValue(new Date(Date.now() + 60 * 60 * 1000))
-  );
+  const [startTime, setStartTime] = useState("");
   const [fastingHoursGoal, setFastingHoursGoal] = useState(16);
   const [inviteEmails, setInviteEmails] = useState("");
   const [inviteInputs, setInviteInputs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setStartTime(getDefaultStartTime());
+  }, []);
 
   const sortedSharedFasts = useMemo(
     () =>
@@ -137,7 +145,7 @@ export default function TogetherClient({
     }
 
     setTitle("Weekend reset");
-    setStartTime(toDateTimeLocalValue(new Date(Date.now() + 60 * 60 * 1000)));
+    setStartTime(getDefaultStartTime());
     setFastingHoursGoal(16);
     setInviteEmails("");
     setMessage(
@@ -359,12 +367,14 @@ export default function TogetherClient({
             const isOwner = sharedFast.owner_id === userId;
             const userIsFastingHere =
               activeSession?.shared_fast_id === sharedFast.id;
-            const startLabel = new Date(sharedFast.start_time).toLocaleString([], {
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "2-digit"
-            });
+            const startLabel = mounted
+              ? new Date(sharedFast.start_time).toLocaleString([], {
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit"
+                })
+              : "Scheduled";
 
             return (
               <article key={sharedFast.id} className="card p-5">

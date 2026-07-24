@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Users } from "lucide-react";
 import {
@@ -30,13 +30,18 @@ export default function AcceptInviteCard({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [startLabel, setStartLabel] = useState("Scheduled");
 
-  const startLabel = new Date(invite.start_time).toLocaleString([], {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
-  });
+  useEffect(() => {
+    setStartLabel(
+      new Date(invite.start_time).toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      })
+    );
+  }, [invite.start_time]);
 
   const acceptInvite = async () => {
     setLoading(true);

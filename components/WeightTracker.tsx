@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Scale, TrendingUp } from "lucide-react";
+import { format } from "date-fns";
 import {
   CartesianGrid,
   Line,
@@ -74,11 +75,18 @@ export default function WeightTracker({
   const router = useRouter();
   const [weight, setWeight] = useState("");
   const [unit, setUnit] = useState<"lb" | "kg">("lb");
-  const [measuredAt, setMeasuredAt] = useState(() =>
-    toDateTimeLocalValue(new Date())
-  );
+  const [measuredAt, setMeasuredAt] = useState("");
+  const [maxMeasuredAt, setMaxMeasuredAt] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [chartReady, setChartReady] = useState(false);
+
+  useEffect(() => {
+    const now = toDateTimeLocalValue(new Date());
+    setMeasuredAt(now);
+    setMaxMeasuredAt(now);
+    setChartReady(true);
+  }, []);
 
   const sortedMeasurements = useMemo(
     () =>
@@ -99,10 +107,7 @@ export default function WeightTracker({
       : null;
 
   const chartData = sortedMeasurements.map((measurement) => ({
-    label: new Date(measurement.measured_at).toLocaleDateString([], {
-      month: "short",
-      day: "numeric"
-    }),
+    label: format(new Date(measurement.measured_at), "MMM d"),
     weight: Number(measurement.weight),
     unit: measurement.unit
   }));
@@ -238,7 +243,7 @@ export default function WeightTracker({
                 className="input"
                 type="datetime-local"
                 value={measuredAt}
-                max={toDateTimeLocalValue(new Date())}
+                max={maxMeasuredAt}
                 onChange={(event) => setMeasuredAt(event.target.value)}
                 required
               />
@@ -272,7 +277,7 @@ export default function WeightTracker({
           </div>
 
           <div className="h-72 w-full">
-            {chartData.length > 0 ? (
+            {chartData.length > 0 && chartReady ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e7efe5" />
@@ -293,6 +298,8 @@ export default function WeightTracker({
                   />
                 </LineChart>
               </ResponsiveContainer>
+            ) : chartData.length > 0 ? (
+              <div className="h-full rounded-lg bg-moss-50/40" />
             ) : (
               <div className="grid h-full place-items-center rounded-lg border border-dashed border-moss-100 text-center text-sm text-stone-500">
                 Add your first measurement to see the graph.

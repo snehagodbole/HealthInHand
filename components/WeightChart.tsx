@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -22,6 +23,12 @@ type WeightChartProps = {
 };
 
 export default function WeightChart({ data }: WeightChartProps) {
+  const [chartReady, setChartReady] = useState(false);
+
+  useEffect(() => {
+    setChartReady(true);
+  }, []);
+
   if (data.length === 0) {
     return (
       <div className="card p-5">
@@ -72,42 +79,46 @@ export default function WeightChart({ data }: WeightChartProps) {
         </span>
       </div>
       <div className="h-72 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id="weightGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#5b8c64" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#5b8c64" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e7efe5" />
-            <XAxis dataKey="label" stroke="#6b7280" tick={{ fontSize: 12 }} />
-            <YAxis
-              stroke="#6b7280"
-              domain={[min, max]}
-              width={42}
-              tick={{ fontSize: 12 }}
-              tickFormatter={(v: number) => `${v}`}
-            />
-            <Tooltip
-              contentStyle={{
-                borderRadius: 8,
-                border: "1px solid #dcebdd",
-                boxShadow: "0 12px 30px rgba(32, 48, 42, 0.1)"
-              }}
-              formatter={(value: number) => [`${value} ${unit}`, "Weight"]}
-            />
-            <Area
-              type="monotone"
-              dataKey="weight"
-              stroke="#5b8c64"
-              strokeWidth={2}
-              fill="url(#weightGradient)"
-              dot={{ r: 3, fill: "#5b8c64" }}
-              activeDot={{ r: 5 }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        {chartReady ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="weightGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#5b8c64" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#5b8c64" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e7efe5" />
+              <XAxis dataKey="label" stroke="#6b7280" tick={{ fontSize: 12 }} />
+              <YAxis
+                stroke="#6b7280"
+                domain={[min, max]}
+                width={42}
+                tick={{ fontSize: 12 }}
+                tickFormatter={(v: number) => `${v}`}
+              />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: 8,
+                  border: "1px solid #dcebdd",
+                  boxShadow: "0 12px 30px rgba(32, 48, 42, 0.1)"
+                }}
+                formatter={(value: number) => [`${value} ${unit}`, "Weight"]}
+              />
+              <Area
+                type="monotone"
+                dataKey="weight"
+                stroke="#5b8c64"
+                strokeWidth={2}
+                fill="url(#weightGradient)"
+                dot={{ r: 3, fill: "#5b8c64" }}
+                activeDot={{ r: 5 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full rounded-lg bg-moss-50/40" />
+        )}
       </div>
     </div>
   );

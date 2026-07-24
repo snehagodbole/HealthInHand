@@ -34,12 +34,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <ServiceWorkerRegistration />
         <Navbar />
         {children}

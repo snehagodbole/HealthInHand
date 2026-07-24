@@ -8,6 +8,24 @@ import {
   supabaseBrowserConfigError
 } from "@/lib/supabaseClient";
 
+function getSafeRedirectPath(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/dashboard";
+  }
+
+  try {
+    const redirectUrl = new URL(value, window.location.origin);
+
+    if (redirectUrl.origin !== window.location.origin) {
+      return "/dashboard";
+    }
+
+    return `${redirectUrl.pathname}${redirectUrl.search}${redirectUrl.hash}`;
+  } catch {
+    return "/dashboard";
+  }
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,7 +35,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setRedirectedFrom(params.get("redirectedFrom") ?? "/dashboard");
+    setRedirectedFrom(getSafeRedirectPath(params.get("redirectedFrom")));
   }, []);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {

@@ -18,9 +18,10 @@ export default function TimerCard({
   activeSession,
   fastingHoursGoal
 }: TimerCardProps) {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
+    setNow(Date.now());
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(interval);
   }, []);
@@ -29,9 +30,11 @@ export default function TimerCard({
     ? new Date(activeSession.start_time).getTime()
     : null;
   const isScheduled =
-    typeof startTimestamp === "number" && startTimestamp > now;
+    typeof startTimestamp === "number" &&
+    typeof now === "number" &&
+    startTimestamp > now;
   const startLabel =
-    typeof startTimestamp === "number"
+    typeof startTimestamp === "number" && typeof now === "number"
       ? new Date(startTimestamp).toLocaleString([], {
           month: "short",
           day: "numeric",
@@ -42,6 +45,10 @@ export default function TimerCard({
 
   const elapsedSeconds = useMemo(() => {
     if (!startTimestamp) {
+      return 0;
+    }
+
+    if (typeof now !== "number") {
       return 0;
     }
 

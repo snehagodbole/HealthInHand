@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Clock3, Play, Square } from "lucide-react";
-import { useState } from "react";
+import { Clock3, Play } from "lucide-react";
+import { useEffect, useState } from "react";
 import { differenceInMinutes } from "date-fns";
 import type { FastingSession } from "@/types/database";
 import {
@@ -28,9 +28,11 @@ export default function FastingControls({
   const router = useRouter();
   const [loading, setLoading] = useState<"start" | "end" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [startTime, setStartTime] = useState(() =>
-    toDateTimeLocalValue(new Date())
-  );
+  const [startTime, setStartTime] = useState("");
+
+  useEffect(() => {
+    setStartTime(toDateTimeLocalValue(new Date()));
+  }, []);
 
   const startFast = async () => {
     setLoading("start");

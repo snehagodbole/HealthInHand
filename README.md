@@ -76,4 +76,19 @@ The schema creates:
 npm run dev
 npm run build
 npm run lint
+npm run test:e2e
+```
+
+## End-to-End Tests
+
+The Playwright e2e suite starts Next.js with a fake Supabase URL and mocks the
+browser-side auth endpoints used by signed-out flows. This keeps the baseline
+tests deterministic without requiring a seeded Supabase project.
+
+Before running the suite for the first time, install the Chromium browser used
+by Playwright:
+
+```bash
+npm run test:e2e:install
+npm run test:e2e
 ```
